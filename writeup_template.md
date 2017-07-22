@@ -8,7 +8,7 @@ The goals / steps of this project are the following:
 
 [//]: # (Image References)
 
-[image1]: ./examples/grayscale.jpg "Grayscale"
+[image1]: ./test_image_output/final_pipeline.jpg "Final Pipeline Results"
 
 ---
 
@@ -16,33 +16,32 @@ The goals / steps of this project are the following:
 
 ### Pipeline
 
-My pipeline consists of 12 steps:
+Originally I setup a pipeline very similar to the one covered in the lectures (grayscale->blur->edge->mask->hough->average->extrapolate). This worked well for the first two problems but failed on the challenge. The main issue was the section of gray road with the yellow line on the left. The pipeline seemed unable to differentiate the two at all. Since I could clearly see the yellow line I researched into the differences between human and machine perception and found out about the HSV and HSL color spaces used in machine vision to better approximate human perception of color. I tried mapping to these colorspaces but any differentiation seemed to be lost when I converted to grayscale for the edge detection. The pipeline was actually worse.
 
-Change colorspace to HSL. Originally I just used the RGB colorspace and things worked well for the first two problems but failed on the challenge. I added some screen shots from the challenge to my test images and identied that the main failure was detecting the yellow line on the gray section of the road. I eventually tried adding a color mask after looking at all the OpenCV methods that the project suggested. Searching for information on the cv2.inRange() method resulted in an interesting article on using a color mask for object detection
+On recomendation from my mentor I tried isolating a single channel after the HSV color conversion but this still didn't improve my solution. I revisted the suggested OpenCV methods in the project and the first, inRange, yielded an interesting result. On searching for more details of the function I found this article: http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_colorspaces/py_colorspaces.html
 
-Mask image to focus on yellow and white regions
+In the article they also convert to the HSV space first, then apply a color mask to isolate an object for object detection. I tried using the mask in the RGB colorspace for yellow and white and my pipeline could now successfully pick out the yellow lines on the gray section of road, but now it couldn't see the yellow line covered in thick shade. I tried creating a mask in the HSV space and this successfully picked out the yellow in all examples, but now the white lines were failing to be detected. Looking at the color wheel for HSV it's actually quite hard to see how to define the color white. The HSL model however makes it very easy to identify all forms of the white color with a variable sensitivty. I was able to detect the lines in all situations using a mapping to the HSL colorspace (actually H*L*S in OpenCV) then masking the colors of interest and continuing with the rest of my pipeline. I see now how the HSL color space is better suited to masking since you can define a range that covers a particular Hue, or color, for a large range of lightness and saturation which covers scenarios like this where a color is heavily in shade.
 
-Change colorspace to Grayscale for effective edge detection
+When averaging the lines discovered by the hough transform I plotted a historgram to get a sense of the distribution of gradients and y-intercepts. Most of them were in a region that aligned with the actuall lanes, but there were still a number of outliers and I knew these would through my average off. I eliminated any verticle lines, as well as any with an absolute gradient less than 0.5 as the true lane lines were always above this. I still had a few outliers however and I didn't want to be too rigid in the kinds of gradients I would accept. Before I averaged the lines I actually used a quick hack where I just selected the longest line as the correct line, this worked pretty well most of the time. I tried plotting the historgram of line gradients and intercepts again, but this time I used the line lengths as weight in the histogram. This gave me a much better result, my outliers were greatly diminished and the true lines were amplified. I decided to use a weighted average with the line lengths as weights.
 
-Gaussian blur image to eliminate noise that could be incorrectly identified as important edges
+Before I discovered the color space conversion and color masking I tried a different approach where I used the lane lines from the previous frame in the video examples. With my new pipeline I didn't need this technique anymore, but I left it in anyway as it actually smooths out the visualisation of the lane lines quite nicely. I use the previous lane lines to influence the averaging of all the calculated hough lines by adding it to my line length weights. I also use the previous lane lines to shift the newly forecast lines slightly towards the lines from the previous frame for a smoother rendering. I'm also able to calculate the difference between the current and previous lines and alert the user if this difference passes a threshold. A sudden jump in lane lines between frames is a good indication that something somewhere has gone wrong.
 
-Run Canny edge detection
+My final pipeline consists of 12 steps:
 
-Mask a region of interest to isolate edges found on the road in-front of the car
+* Change colorspace to HSL.
+* Mask image to focus on yellow and white regions
+* Change colorspace to Grayscale for effective edge detection
+* Gaussian blur image to eliminate noise that could be incorrectly identified as important edges
+* Run Canny edge detection
+* Mask a region of interest to isolate edges found on the road in-front of the car
+* Run a hough-transform to identify contiguous lines discovered using Canny edge detection
+* Split the lines into left and right lane candidates by paritioning on the gradient. negative gradients are on the left, positive are on the right. The lines on the left would seem to have a positive slope, but since the y axis is inverted the sign of the gradients is inverted too
+* Average the identified lines, weighting the average by the lengths of the lines and the similarity to the lines from the previous frame
+* Perform a final check to make sure the new lanes haven't devitaed from the lanes in the previous frame too much. If they have notify the user of a possible error. 
+* Average the new line to be slightly closer to the previous line to smooth the line transitions between each frame
+* Draw the lines onto the image or frame for display
 
-Run a hough-transform to identify contiguous lines discovered using Canny edge detection
-
-Split the lines into left and right lane candidates by paritioning on the gradient. negative gradients are on the left, positive are on the right. The lines on the left would seem to have a positive slope, but since the y axis is inverted the sign of the gradients is inverted too
-
-Average the identified lines, weighting the average by the lengths of the lines and the similarity to the lines from the previous frame
-
-Perform a final check to make sure the new lanes haven't devitaed from the lanes in the previous frame too much. If they have notify the user of a possible error. 
-
-Average the new line to be slightly closer to the previous line to smooth the line transitions between each frame
-
-Draw the lines onto the image or frame for display
-
-
+Below is the result of the final pipeline on all of the example images. In the left column is the original image with the lane lines in red and the candidate lines in green overlayed on top. The middle column is the image after edge detection and masking the region of interest. The final column is the color space converted and color masked image
 
 ![alt text][image1]
 
