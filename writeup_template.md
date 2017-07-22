@@ -8,8 +8,8 @@ The goals / steps of this project are the following:
 
 [//]: # (Image References)
 
-[image1]: ./test_image_output/final_pipeline.jpg "Final Pipeline Results"
-[image2]: ./test_image_output/line_histograms.jpg "Line distributions"
+[image1]: ./test_image_output/final_pipeline.png "Final Pipeline Results"
+[image2]: ./test_image_output/line_distribution.png "Line distributions"
 
 ---
 
