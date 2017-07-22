@@ -17,7 +17,7 @@ The goals / steps of this project are the following:
 
 ### Pipeline
 
-My final pipeline consists of 12 steps:
+My final pipeline consists of 13 steps:
 
 * Change colorspace to HSL.
 * Mask image to focus on yellow and white regions
@@ -28,6 +28,7 @@ My final pipeline consists of 12 steps:
 * Run a hough-transform to identify contiguous lines discovered using Canny edge detection
 * Split the lines into left and right lane candidates by paritioning on the gradient. negative gradients are on the left, positive are on the right. The lines on the left would seem to have a positive slope, but since the y axis is inverted the sign of the gradients is inverted too
 * Average the identified lines, weighting the average by the lengths of the lines and the similarity to the lines from the previous frame
+* Extrapolate the average line so that it has the same gradient and intercept but extends to the required y values below the horizon and at the bottom of the frame.
 * Perform a final check to make sure the new lanes haven't deviated from the lanes in the previous frame too much. If they have notify the user of a possible error. 
 * Average the new line to be slightly closer to the previous line to smooth the line transitions between each frame
 * Draw the lines onto the image or frame for display
