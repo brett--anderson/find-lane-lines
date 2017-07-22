@@ -52,13 +52,14 @@ Below is the result of the final pipeline on all of the example images. In the l
 ### 2. Possible Issues
 
 
-One potential shortcoming would be what would happen when ... 
-
-Another shortcoming could be ...
+* Only accepting lines with a gradient above 0.5 might be too rigid in some situations, I would need more example videos to confirm this.
+* Influencing current lines by using the previous lines might not be ideal. If the car hit a hole and shifted orientation quickly the previous lines would be poor indicators of where the new lane lines are. I'm not sure how likely this is though and it would still converage to the new truth quickly
+* The region of interest masking is based on a hardcoded horizon, in reality the horizon would change in different scenarios, e.g. the car climbing a hill
+* This model uses straight lines and doesn't give a clear indication of the required steering angle when driving around a corner
 
 
 ### 3. Improvements
 
-A possible improvement would be to ...
-
-Another potential improvement could be to ...
+* Automated horizon detection
+* Non linear model for understanding turns better
+* SLAM to navigate using landmarks as well as lane lines, for scenarios where there are no clear lane lines.
